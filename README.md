@@ -1,76 +1,117 @@
-# YouTube RAG Assistant (Python 3.14 Compatible)
+# RAG-Based Multi-Video YouTube Question-Answer Assistant
 
-A ChatGPT-style assistant that answers questions from YouTube video transcripts.
-**Backend:** FastAPI + LangChain + **FAISS** + Gemini.
-**Frontend:** Vanilla HTML/CSS/JS (ChatGPT-style UI).
+## Overview
 
-## Why FAISS instead of ChromaDB?
+The RAG-Based Multi-Video YouTube Question-Answer Assistant is an AI-powered application that enables users to ask natural language questions across multiple YouTube videos simultaneously. The system extracts video transcripts, converts them into vector embeddings, retrieves the most relevant information using semantic search, and generates accurate, context-aware answers using Google's Gemini large language model.
 
-ChromaDB pulls in `grpcio`, which has no prebuilt wheels for Python 3.14 on
-Windows yet and fails with `ImportError: DLL load failed while importing cygrpc`.
-This project uses **FAISS (`faiss-cpu`)**, which has Python 3.14 wheels and
-zero gRPC dependencies.
+This project demonstrates the implementation of Retrieval-Augmented Generation (RAG) using FastAPI, LangChain, FAISS, Hugging Face Embeddings, and Google Gemini.
 
-## Project structure
+---
 
-```
-yt-rag/
-├── backend/
-│   ├── main.py              # FastAPI app
-│   ├── rag.py               # FAISS RAG pipeline
-│   ├── transcript_loader.py # YouTube transcripts + oEmbed metadata
-│   ├── models.py            # Pydantic models
-│   ├── requirements.txt
-│   └── .env.example
-├── frontend/
-│   ├── index.html
+## Features
+
+- Upload and index multiple YouTube videos
+- Automatic transcript extraction
+- Intelligent text chunking for efficient retrieval
+- Semantic search using vector embeddings
+- AI-powered question answering
+- Source-aware responses
+- Persistent vector storage
+- FastAPI REST API backend
+- Interactive web interface built with HTML, CSS, and JavaScript
+- Error handling for invalid videos and unavailable transcripts
+
+---
+
+## Technology Stack
+
+### Backend
+
+- Python
+- FastAPI
+- Uvicorn
+
+### AI & Retrieval
+
+- Google Gemini API
+- LangChain
+- Hugging Face Embeddings
+- FAISS
+- Sentence Transformers
+
+### Frontend
+
+- HTML5
+- CSS3
+- JavaScript
+
+### Data Processing
+
+- YouTube Transcript API
+- Recursive Character Text Splitter
+
+---
+
+## Project Structure
+
+```text
+project/
+│
+├── static/
 │   ├── style.css
-│   └── script.js
+│   ├── script.js
+│
+├── templates/
+│   └── index.html
+│
+├── vectordb/
+│
+├── main.py
+├── rag.py
+├── requirements.txt
+├── .env
 └── README.md
 ```
 
-## Setup (Windows 11, Python 3.14, VS Code)
+---
 
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install --upgrade pip
-pip install -r requirements.txt
+## System Workflow
+
+1. Users submit one or more YouTube video URLs.
+2. The application extracts transcripts from each video.
+3. The transcripts are split into smaller text chunks.
+4. Each chunk is converted into vector embeddings.
+5. Embeddings are stored in a FAISS vector database.
+6. When a user asks a question, the query is converted into an embedding.
+7. The system retrieves the most relevant transcript chunks.
+8. The retrieved context is passed to Google Gemini.
+9. Gemini generates a context-aware answer, which is returned along with the relevant source information.
+
+---
+
+## RAG Pipeline
+
+```text
+YouTube URLs
+      │
+      ▼
+Transcript Extraction
+      │
+      ▼
+Text Chunking
+      │
+      ▼
+Embedding Generation
+      │
+      ▼
+FAISS Vector Database
+      │
+      ▼
+Semantic Retrieval
+      │
+      ▼
+Google Gemini
+      │
+      ▼
+Final Answer with Source References
 ```
-
-Create `.env` from `.env.example` and add your Gemini API key:
-
-```
-GOOGLE_API_KEY=your_key_here
-```
-
-Get a free key at https://aistudio.google.com/app/apikey
-
-## Run
-
-```bash
-cd backend
-python -m uvicorn main:app --reload
-```
-
-Open http://localhost:8000
-
-The backend serves the frontend on `/`, so a single command runs the whole app.
-
-## API
-
-| Method | Path                | Description              |
-|--------|---------------------|--------------------------|
-| GET    | /api/health         | Health check             |
-| GET    | /api/videos         | List indexed videos      |
-| POST   | /api/videos         | `{ "url": "..." }` add   |
-| DELETE | /api/videos/{id}    | Remove a video           |
-| POST   | /api/ask            | `{ "question": "..." }`  |
-| POST   | /api/reset          | Clear index              |
-
-## Notes
-
-- FAISS index persists to `backend/faiss_store/`.
-- Embeddings use `sentence-transformers/all-MiniLM-L6-v2` (downloaded on first run).
-- First request downloads the embedding model (~90 MB).
